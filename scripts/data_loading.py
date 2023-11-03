@@ -290,4 +290,4 @@ if __name__ == '__main__':
     app_ids = [1245620, 570, 292030, 570940, 236430, 374320, 367520, 435150, 1888160, 814380, 730, 588650]
     
     steam_works = SteamWorks()
-    steam_works.download_reviews_to_csv_several_ids('reviews', app_ids)
+    steam_works.download_reviews_to_csv_several_ids('../data/reviews', app_ids)
