@@ -1,18 +1,11 @@
 import pandas as pd
-import matplotlib.pyplot as plt
-import tensorflow as tf
-import pickle
-from keras.utils import to_categorical
-import keras.layers
 import numpy as np
-from timeit import default_timer as timer
+import tensorflow as tf
+from keras.utils import to_categorical
 from keras.preprocessing.text import Tokenizer
+import matplotlib.pyplot as plt
 
-print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
-
-exit()
-
-file_path = "../data/reviews/cat.csv"
+file_path = "../data/reviews/reviews.csv"
 
 print("Start data loading.")
 train = pd.read_csv(file_path)
@@ -33,18 +26,18 @@ print(unique_voted_up_values)
 counts = train['voted_up'].value_counts().to_numpy()
 print(counts)
 
-# fig, ax = plt.subplots()
-#
-# bar_labels = ['red', 'blue']
-# bar_colors = ['tab:red', 'tab:blue']
-#
-# rects = ax.bar(unique_voted_up_values, counts, label=unique_voted_up_values, color=bar_colors)
-#
-# ax.set_ylim([0, np.max(counts) + np.max(counts) * 0.2])
-# ax.bar_label(rects, padding=3)
-# ax.set_title('Target count in training set')
-#
-# plt.show()
+fig, ax = plt.subplots()
+
+bar_labels = ['red', 'blue']
+bar_colors = ['tab:red', 'tab:blue']
+
+rects = ax.bar(unique_voted_up_values, counts, label=unique_voted_up_values, color=bar_colors)
+
+ax.set_ylim([0, np.max(counts) + np.max(counts) * 0.2])
+ax.bar_label(rects, padding=3)
+ax.set_title('Target count in training set')
+
+plt.show()
 
 # There are many more true values than false ones, which is bad.
 
