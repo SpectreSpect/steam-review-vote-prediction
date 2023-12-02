@@ -5,7 +5,7 @@ from keras.utils import to_categorical
 from keras.preprocessing.text import Tokenizer
 import matplotlib.pyplot as plt
 
-file_path = "../data/reviews/reviews.csv"
+file_path = "../data/reviews/14/reviews.csv"
 
 print("Start data loading.")
 train = pd.read_csv(file_path)
