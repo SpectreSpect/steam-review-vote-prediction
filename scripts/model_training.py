@@ -5,26 +5,38 @@ from keras.utils import to_categorical
 from keras.preprocessing.text import Tokenizer
 import matplotlib.pyplot as plt
 
-file_path = "../data/reviews/14/reviews.csv"
-
-print("Start data loading.")
+file_path = "../data/reviews/98/reviews.csv"
+print("------------YOU NEED TO DROP REVIEWS THAT APPEAR MORE THAN ONE TIME------------")
+# print("Start data loading.")
 train = pd.read_csv(file_path)
-print("The train data loading has been completed.\n")
+# print("The train data loading has been completed.\n")
 
-print(f"Columns: {train.columns}")
-print("Train dataframe info: \n")
-print(train.info())
+# print(f"Columns: {train.columns}")
+# print("Train dataframe info: \n")
+# print(train.info())
 
 # The review column has some missing values. It's better to just delete them because these are few.
-print("\nDropping rows with missing values.")
+# print("\nDropping rows with missing values.")
 train.dropna(subset=['review'], inplace=True)
-print("Dropping has been completed. Resulted array: \n")
-print(train.info())
+# print("Dropping has been completed. Resulted array: \n")
+# print(train.info())
 
 unique_voted_up_values = train['voted_up'].astype("string").unique()
-print(unique_voted_up_values)
+# print(unique_voted_up_values)
 counts = train['voted_up'].value_counts().to_numpy()
-print(counts)
+# print(counts)
+
+repetitions = train['review'].value_counts()
+repetitions = repetitions[repetitions > 1]
+for index in repetitions.index:
+    print(index)
+
+
+# for review in train['review'].value_counts():
+#     if review > 1:
+#         print(review)
+
+
 
 fig, ax = plt.subplots()
 
@@ -36,7 +48,7 @@ rects = ax.bar(unique_voted_up_values, counts, label=unique_voted_up_values, col
 ax.set_ylim([0, np.max(counts) + np.max(counts) * 0.2])
 ax.bar_label(rects, padding=3)
 ax.set_title('Target count in training set')
-
+print("------------YOU NEED TO DROP REVIEWS THAT APPEAR MORE THAN ONE TIME------------")
 plt.show()
 
 # There are many more true values than false ones, which is bad.
@@ -55,7 +67,7 @@ for i in range(len(review_sequences)):
 
 max_seq_len = max([len(s) for s in review_sequences])
 review_sequences = tf.constant([s + [0] * (max_seq_len - len(s)) for s in review_sequences])
-
+print("------------YOU NEED TO DROP REVIEWS THAT ARE ENCOUNTERED MORE THAN ONE TIME------------")
 review_sequences = tf.convert_to_tensor(review_sequences)
 num_label_classes = train['voted_up'].nunique()
 labels = to_categorical(train['voted_up'], num_classes=num_label_classes)
@@ -73,4 +85,5 @@ model.compile(loss='categorical_crossentropy',
               optimizer='adam',
               metrics='accuracy')
 
+print("------------YOU NEED TO DROP REVIEWS THAT APPEAR MORE THAN ONE TIME------------")
 model.fit(review_sequences, labels, epochs=10, batch_size=128, validation_split=0.2)
