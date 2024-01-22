@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import os
 import re
 import pickle
-
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 def hms_string(sec_elapsed):
     h = int(sec_elapsed / (60 * 60))
@@ -58,7 +58,15 @@ def get_review_sequences_and_labels(data, tokenizer):
     # start_token = tokens_count
     # end_token = tokens_count + 1
     max_seq_len = max([len(s) for s in review_sequences])
-    review_sequences = tf.constant([s + [0] * (max_seq_len - len(s)) for s in review_sequences])
+    # review_sequences = tf.constant([s + [0] * (max_seq_len - len(s)) for s in review_sequences])
+    # review_sequences = tf.constant([s + [0] * (max_seq_len - len(s)) for s in review_sequences]).gpu()
+    # review_sequences = tf.convert_to_tensor([s + [0] * (max_seq_len - len(s)) for s in review_sequences], dtype=tf.float32)
+    review_sequences = pad_sequences(review_sequences, padding='post')
+
+
+
+    # review_sequences = np.array([s + [0] * (max_seq_len - len(s)) for s in review_sequences])
+    # review_sequences = tf.convert_to_tensor([s + [0] * (max_seq_len - len(s)) for s in review_sequences]).gpu()
 
     review_sequences = tf.convert_to_tensor(review_sequences)
     labels = to_categorical(data['voted_up'], num_classes=2)
@@ -100,7 +108,7 @@ if flag == 0:
 elif flag == 1:
     checkpoint_dir = "../models/00001-test-train/"
 
-train = pd.read_csv("../data/reviews/1/reviews.csv")
+train = pd.read_csv("../data/reviews/98/reviews.csv")
 train = preprocess_train_data(train)
 max_words_num = 20000
 checkpoint_name = 'checkpoint.model.keras'
@@ -123,7 +131,7 @@ model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
 log_filepath = checkpoint_dir + '/' + 'log.csv'
 csv_logger = tf.keras.callbacks.CSVLogger(log_filepath, append=True)
 
-if flag == 0: # start training
+if flag == 0:   # start training
     model = build_model(tokens_count, 2)
 elif flag == 1:
     model = tf.keras.models.load_model(checkpoint_filepath)
