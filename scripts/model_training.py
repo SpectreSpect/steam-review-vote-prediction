@@ -54,46 +54,25 @@ def show_voted_up_distribution(data):
 
 def get_review_sequences_and_labels(data, tokenizer, batch_size):
     review_sequences = tokenizer.texts_to_sequences(data['review'])
-    # tokens_count = min(max_words_num, len(tokenizer.index_word))
-    # start_token = tokens_count
-    # end_token = tokens_count + 1
     max_seq_len = max([len(s) for s in review_sequences])
-    # review_sequences = tf.constant([s + [0] * (max_seq_len - len(s)) for s in review_sequences])
-    # review_sequences = tf.constant([s + [0] * (max_seq_len - len(s)) for s in review_sequences]).gpu()
-    # review_sequences = tf.convert_to_tensor([s + [0] * (max_seq_len - len(s)) for s in review_sequences], dtype=tf.float32)
     review_sequences = pad_sequences(review_sequences, padding='post')
 
-
-
-    # review_sequences = np.array([s + [0] * (max_seq_len - len(s)) for s in review_sequences])
-    # review_sequences = tf.convert_to_tensor([s + [0] * (max_seq_len - len(s)) for s in review_sequences]).gpu()
-
-    # review_sequences = tf.convert_to_tensor(review_sequences)
     labels = to_categorical(data['voted_up'], num_classes=2)
-    # labels = tf.convert_to_tensor(labels)
 
     dataset = tf.data.Dataset.from_tensor_slices((review_sequences, labels))
     dataset = dataset.shuffle(buffer_size=len(data))
-    # dataset = dataset.cache()
-    dataset = dataset.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
-    # dataset = dataset.cache(filename="./cached_data")
 
-    # dataset = dataset.batch(128)
+    dataset = dataset.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
 
     validation_size = int(len(train) * 0.0)
 
     train_dataset = dataset.skip(validation_size).batch(batch_size).cache()
     validation_dataset = dataset.take(validation_size).batch(batch_size).cache()
 
-
-
-    # return review_sequences, labels
     return train_dataset, validation_dataset
 
 
 def create_and_fit_tokenizer(data, max_words_num):
-    # num_words = 20000
-    # total_vocabulary_size = max_words_num + 2 # to take into account start and end tokens
     tokenizer = Tokenizer(num_words=max_words_num, filters='!–"—#$%&amp;()*+,-./:;<=>?@[\\]^_`{|}~\t\n\r«»', lower=True,
                         split=' ', char_level=False)
     tokenizer.fit_on_texts(data['review'])
