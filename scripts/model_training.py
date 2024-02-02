@@ -8,6 +8,9 @@ import os
 import re
 import pickle
 from tensorflow.keras.preprocessing.sequence import pad_sequences
+import matplotlib.pyplot as plt
+
+# os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 def hms_string(sec_elapsed):
     h = int(sec_elapsed / (60 * 60))
@@ -59,16 +62,16 @@ def get_review_sequences_and_labels(data, tokenizer, batch_size):
 
     labels = to_categorical(data['voted_up'], num_classes=2)
 
+
     dataset = tf.data.Dataset.from_tensor_slices((review_sequences, labels))
     dataset = dataset.shuffle(buffer_size=len(data))
-
     dataset = dataset.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
 
-    validation_size = int(len(train) * 0.0)
+    validation_size = int(len(train) * 0.2)
 
     train_dataset = dataset.skip(validation_size).batch(batch_size).cache()
+    
     validation_dataset = dataset.take(validation_size).batch(batch_size).cache()
-
     return train_dataset, validation_dataset
 
 
@@ -85,44 +88,38 @@ def build_model(vocab_size, num_classes):
                                                   output_dim=10, 
                                                   input_shape=(None,),
                                                   mask_zero=True)(inputs)
-    lstm_outputs_1 = tf.keras.layers.LSTM(10, return_sequences=True)(embedding_outputs)
-    lstm_outputs_2 = tf.keras.layers.LSTM(10, return_sequences=True)(lstm_outputs_1)
-    lstm_outputs_3 = tf.keras.layers.LSTM(10)(lstm_outputs_2)
+    lstm_outputs_1 = tf.keras.layers.LSTM(30, return_sequences=True)(embedding_outputs)
+    lstm_outputs_2 = tf.keras.layers.LSTM(30, return_sequences=True)(lstm_outputs_1)
+    lstm_outputs_3 = tf.keras.layers.LSTM(30)(lstm_outputs_2)
     outputs = tf.keras.layers.Dense(num_classes, 'softmax')(lstm_outputs_3)
 
     model = tf.keras.Model(inputs, outputs)
+    
+    
+    optimizer = tf.keras.optimizers.Adam(learning_rate=0.04)
+    
     model.compile(loss='categorical_crossentropy',
-                  optimizer='adam',
+                  optimizer=optimizer,
                   metrics='accuracy')
     return model
 
-
-flag = int(input("What do you want to do?(0 - start training, 1 - resume training): "))
+flag = 0
 
 if flag == 0:
-    checkpoint_dir = generate_output_dir('../models/', "test-train")
+    checkpoint_dir = generate_output_dir('/kaggle/working/models/', "train")
 elif flag == 1:
-    checkpoint_dir = "../models/00001-test-train/"
+    checkpoint_dir = "/kaggle/working/models/00001-test-train/"
 
-train = pd.read_csv("../data/reviews/98/reviews.csv", nrows=1000)
+train = pd.read_csv("/kaggle/input/reviews/reviews.csv")
 train = preprocess_train_data(train)
 max_words_num = 20000
-checkpoint_name = 'checkpoint.model.keras'
 
-
-# show_voted_up_distribution(train)
-
+checkpoint_name = 'cp.ckpt'
 
 tokenizer = create_and_fit_tokenizer(train, max_words_num - 2)
-
 tokens_count = min(max_words_num, len(tokenizer.index_word)) + 1
-# review_sequences, labels = get_review_sequences_and_labels(train, tokenizer)
-train_dataset, validation_dataset = get_review_sequences_and_labels(train, tokenizer, 128)
 
-loaded_model = tf.keras.models.load_model('../loaded_models_for_test/1')
-loaded_model.evaluate(train_dataset)
-exit()
-
+train_dataset, validation_dataset = get_review_sequences_and_labels(train, tokenizer, 1000)
 
 checkpoint_filepath = checkpoint_dir + '/' + checkpoint_name
 model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
@@ -140,11 +137,16 @@ elif flag == 1:
     model = tf.keras.models.load_model(checkpoint_filepath)
 
 model.summary()
-# exit()
 
-# print(train_dataset.element_spec)
+history = model.fit(train_dataset,
+                    validation_data=validation_dataset,
+                    epochs=60, callbacks=[model_checkpoint_callback, csv_logger]).history
+model.save("/kaggle/working/models/1")
 
-model.fit(train_dataset,
-          validation_data=validation_dataset,
-          epochs=50,
-          callbacks=[model_checkpoint_callback, csv_logger])
+plt.plot(history['accuracy'], label='accuracy')
+plt.plot(history['val_accuracy'], label='validation accuracy')
+plt.title('model accuracy')
+plt.xlabel('epochs')
+plt.ylabel('accuracy')
+plt.legend()
+plt.show()
