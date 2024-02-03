@@ -121,6 +121,7 @@ tokens_count = min(max_words_num, len(tokenizer.index_word)) + 1
 
 train_dataset, validation_dataset = get_review_sequences_and_labels(train, tokenizer, 1000)
 
+
 checkpoint_filepath = checkpoint_dir + '/' + checkpoint_name
 model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=checkpoint_filepath,
